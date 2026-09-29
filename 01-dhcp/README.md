@@ -34,7 +34,7 @@ Perangkat yang dipakai: 1 router MikroTik, 1 switch, dan 5 VPCS sebagai client.
 
 Saat pertama kali login, RouterOS meminta password baru. Password default diganti terlebih dahulu untuk mencegah akses tidak sah, meskipun ini hanya lab.
 
-![Ganti password saat login pertama](images/ganti-pass.png)
+![Ganti password saat login pertama](ganti-pass.png)
 
 ## 5. Konfigurasi DHCP Server
 
