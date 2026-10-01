@@ -57,8 +57,8 @@ Perintah dijalankan di terminal MikroTik masing-masing router. Versi lengkapnya 
 
 ```routeros
 /system identity set name=R1
-/ip address add address=10.10.10.1/30 interface=ether1 comment="Link PtP ke R2"
-/ip address add address=192.168.10.1/24 interface=ether2 comment="LAN PC1"
+/ip address add address=10.10.10.1/30 interface=ether1 comment="Link PTP to R2"
+/ip address add address=192.168.10.1/24 interface=ether2 comment="LAN PC"
 ```
 
 Perintah `identity` mengganti nama router, dan `comment` memberi keterangan pada tiap IP. Keduanya tidak wajib, tapi membuat prompt dan daftar IP lebih mudah dibaca.
@@ -66,7 +66,7 @@ Perintah `identity` mengganti nama router, dan `comment` memberi keterangan pada
 **Static route ke LAN R2**
 
 ```routeros
-/ip route add dst-address=192.168.20.0/24 gateway=10.10.10.2 comment="Ke LAN R2"
+/ip route add dst-address=192.168.20.0/24 gateway=10.10.10.2 
 ```
 
 Artinya: untuk mencapai `192.168.20.0/24`, kirim paket ke `10.10.10.2` (alamat R2 di link PtP).
@@ -77,26 +77,70 @@ Artinya: untuk mencapai `192.168.20.0/24`, kirim paket ke `10.10.10.2` (alamat R
 
 ```routeros
 /system identity set name=R2
-/ip address add address=10.10.10.2/30 interface=ether1 comment="Link PtP ke R1"
-/ip address add address=192.168.20.1/24 interface=ether2 comment="LAN PC2"
+/ip address add address=10.10.10.2/30 interface=ether1 comment="Link PTP to R1"
+/ip address add address=192.168.20.1/24 interface=ether2 comment="LAN PC"
 ```
 
 **Static route ke LAN R1**
 
 ```routeros
-/ip route add dst-address=192.168.10.0/24 gateway=10.10.10.1 comment="Ke LAN R1"
+/ip route add dst-address=192.168.10.0/24 gateway=10.10.10.1 
 ```
 
 Artinya: untuk mencapai `192.168.10.0/24`, kirim paket ke `10.10.10.1` (alamat R1 di link PtP).
 
-### c. Client (VPCS)
+### c. Client (VPCS): memasukkan IP ke PC
 
-Alamat di VPCS diatur manual, tanpa DHCP, supaya fokus lab tetap ke routing.
+PC di lab ini adalah VPCS, dan alamatnya diatur manual lewat console, tanpa DHCP, supaya fokus lab tetap ke routing. Langkah ini penting: tanpa IP dan gateway yang benar, PC tidak akan bisa mengirim paket ke jaringan lain walaupun router sudah dikonfigurasi dengan benar.
+
+**Format perintah**
+
+```
+ip <alamat-ip>/<prefix> <gateway>
+```
+
+- **alamat-ip/prefix**: alamat PC beserta panjang subnet-nya. `/24` sama dengan subnet mask `255.255.255.0`.
+- **gateway**: alamat router di LAN yang sama dengan PC. Semua paket yang tujuannya di luar LAN dikirim PC ke alamat ini.
+
+**Perintah untuk kedua PC**
+
+Buka console PC1 (klik dua kali pada PC1 di GNS3), lalu ketik:
 
 ```
 PC1> ip 192.168.10.10/24 192.168.10.1
+```
+
+Buka console PC2, lalu ketik:
+
+```
 PC2> ip 192.168.20.10/24 192.168.20.1
 ```
+
+Gateway PC1 adalah `192.168.10.1`, yaitu `ether2` milik R1 (router di LAN yang sama dengan PC1). Begitu juga gateway PC2 adalah `192.168.20.1`, `ether2` milik R2. Gateway **bukan** alamat link PtP (`10.10.10.x`), karena PC tidak berada di jaringan itu.
+
+**Cek hasilnya**
+
+```
+PC1> show ip
+```
+
+Pastikan alamat IP, subnet mask, dan gateway sudah sesuai dengan rencana alamat di bagian 3.
+
+![Hasil show ip di PC1](images/show-ip-pc1.png)
+
+![Hasil show ip di PC2](images/show-ip-pc2.png)
+
+**Simpan konfigurasi**
+
+```
+PC1> save
+```
+
+Alamat yang dimasukkan lewat perintah `ip` hilang saat PC di-restart atau project GNS3 dibuka ulang. Perintah `save` menyimpannya ke file startup VPCS, sehingga alamat terpasang lagi otomatis saat PC dinyalakan. Lakukan juga di PC2.
+
+**Kenapa gateway wajib diisi?**
+
+Tanpa gateway, PC hanya bisa berkomunikasi dengan perangkat di LAN-nya sendiri. PC1 masih bisa ping `192.168.10.1` (R1), tapi ping ke `192.168.20.10` (PC2) gagal, karena PC1 tidak tahu ke mana harus mengirim paket yang tujuannya di luar `192.168.10.0/24`. Gateway adalah "pintu keluar" dari LAN itu.
 
 ## 7. Verifikasi
 
@@ -187,6 +231,9 @@ Percobaan ini menunjukkan kenapa route harus ada di kedua arah.
 | Gejala | Kemungkinan penyebab | Cek |
 | --- | --- | --- |
 | Ping ke gateway PC sendiri gagal | IP di VPCS atau di router salah | `show ip` di VPCS dan `/ip address print` di router |
+| PC bisa ping router, tapi tidak bisa ping PC di LAN lain | Gateway PC belum diisi, atau salah | `show ip` di VPCS. Gateway harus alamat `ether2` router di LAN yang sama |
+| Gateway PC diisi `10.10.10.x` | Mengira gateway adalah alamat link PtP | Ganti dengan `192.168.10.1` (PC1) atau `192.168.20.1` (PC2) |
+| IP PC hilang setelah project dibuka ulang | Konfigurasi VPCS belum disimpan | Jalankan `save` di console PC setelah mengatur IP |
 | Ping antar router (10.10.10.1 dan 10.10.10.2) gagal | Salah interface atau subnet link | Pastikan keduanya di `ether1` dan sama-sama `/30` |
 | PC1 hanya bisa ping R1, tidak bisa ping PC2 | Static route belum ada atau salah | `/ip route print` di kedua router |
 | Ping satu arah berhasil, arah sebaliknya gagal | Route hanya ada di satu router | Tambahkan route di router yang satunya |
