@@ -126,9 +126,9 @@ PC1> show ip
 
 Pastikan alamat IP, subnet mask, dan gateway sudah sesuai dengan rencana alamat di bagian 3.
 
-![Hasil show ip di PC1](images/show-ip-pc1.png)
+![Hasil show ip di PC1](images/ip-address-pc1.png)
 
-![Hasil show ip di PC2](images/show-ip-pc2.png)
+![Hasil show ip di PC2](images/ip-address-pc2.png)
 
 **Simpan konfigurasi**
 
