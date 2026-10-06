@@ -25,15 +25,15 @@ Switch dipakai agar satu PPPoE server di satu interface R-ISP bisa melayani kedu
 | Item | Nilai |
 | --- | --- |
 | Nama pool | `pool-pppoe` |
-| Range pool | `172.16.0.10` – `172.16.0.100` |
+| Range pool | `10.10.10.2` – `10.10.10.10` |
 | Nama profile | `profile-pppoe` |
-| Alamat lokal R-ISP (`local-address`) | `172.16.0.1` |
+| Alamat lokal R-ISP (`local-address`) | `10.10.10.1` |
 | Nama PPPoE server | `isp` (di `ether1` R-ISP) |
 
 | Pelanggan | Router | Username | Password |
 | --- | --- | --- | --- |
-| Pelanggan 1 | R-Client1 | `pelanggan1` | `contoh1` |
-| Pelanggan 2 | R-Client2 | `pelanggan2` | `contoh2` |
+| Pelanggan 1 | R-Client1 | `Client1` | `Cl1` |
+| Pelanggan 2 | R-Client2 | `Client2` | `Cl2` |
 
 Password di atas hanya contoh untuk lab. Karena repo ini publik, jangan pernah memakai password asli, dan gunakan `/export hide-sensitive` kalau mengekspor konfigurasi.
 
@@ -77,7 +77,7 @@ Urutannya penting, karena profile memakai pool dan secret memakai profile. Kalau
 **1) Membuat pool alamat IP**
 
 ```routeros
-/ip pool add name=pool-pppoe ranges=172.16.0.10-172.16.0.100
+/ip pool add name=pool-pppoe ranges=10.10.10.2-10.10.10.10
 ```
 
 Menentukan rentang IP yang akan dipinjamkan ke pelanggan.
@@ -85,7 +85,7 @@ Menentukan rentang IP yang akan dipinjamkan ke pelanggan.
 **2) Membuat PPP profile**
 
 ```routeros
-/ppp profile add name=profile-pppoe local-address=172.16.0.1 remote-address=pool-pppoe
+/ppp profile add name=profile-pppoe local-address=10.10.10.1 remote-address=pool-pppoe
 ```
 
 `local-address` adalah alamat R-ISP di setiap link PPP, dan `remote-address` menunjuk pool tempat alamat pelanggan diambil.
@@ -105,13 +105,12 @@ Satu akun untuk satu pelanggan. Dengan akun terpisah, ISP bisa melihat siapa yan
 /interface pppoe-server server add service-name=isp interface=ether1 default-profile=profile-pppoe disabled=no
 ```
 
-Server dibuat di `ether1`. Parameter `disabled=no` ditulis eksplisit karena server yang dibuat lewat CLI bisa berstatus nonaktif (lihat [troubleshooting](#9-troubleshooting)).
 
 ### b. Router R-Client1 (PPPoE client)
 
 ```routeros
 /system identity set name=R-Client1
-/interface pppoe-client add name=pppoe-out1 interface=ether1 user=pelanggan1 password=contoh1 disabled=no
+/interface pppoe-client add name=pppoe-out1 interface=ether1 user=Client1 password=Cl1 disabled=no
 ```
 
 - `interface` adalah interface yang menuju sisi ISP (lewat switch).
@@ -121,7 +120,7 @@ Server dibuat di `ether1`. Parameter `disabled=no` ditulis eksplisit karena serv
 
 ```routeros
 /system identity set name=R-Client2
-/interface pppoe-client add name=pppoe-out1 interface=ether1 user=pelanggan2 password=contoh2 disabled=no
+/interface pppoe-client add name=pppoe-out1 interface=ether1 user=Client2 password=Cl2 disabled=no
 ```
 
 Konfigurasinya sama dengan R-Client1, hanya username dan password yang berbeda.
@@ -136,9 +135,9 @@ Konfigurasinya sama dengan R-Client1, hanya username dan password yang berbeda.
 /interface pppoe-server server print
 ```
 
-![Profile dan secret di R-ISP](images/profile-secret-isp.png)
+![Profile dan secret di R-ISP](images/pppoe-profile.png)
 
-![PPPoE server di R-ISP](images/pppoe-server-isp.png)
+![PPPoE server di R-ISP](images/pppoe-secret-pppoe-server.png)
 
 Pada `pppoe-server server print`, pastikan tidak ada flag `X` di depan baris server. Flag `X` berarti server nonaktif.
 
@@ -155,11 +154,11 @@ Tanda berhasil: interface `pppoe-out1` berflag `R` (*running*), dan muncul alama
 
 **R-Client1**
 
-![Status PPPoE client R-Client1](images/pppoe-client-r1.png)
+![Status PPPoE client R-Client1](images/pppoe-client1.png)
 
 **R-Client2**
 
-![Status PPPoE client R-Client2](images/pppoe-client-r2.png)
+![Status PPPoE client R-Client2](images/pppoe-client2.png)
 
 ### c. Sesi aktif di R-ISP
 
@@ -169,43 +168,26 @@ Tanda berhasil: interface `pppoe-out1` berflag `R` (*running*), dan muncul alama
 
 ![Sesi PPPoE aktif di R-ISP](images/ppp-active-isp.png)
 
-Harus muncul dua sesi aktif, yaitu `pelanggan1` dan `pelanggan2`, masing-masing dengan alamat IP berbeda dari pool.
+Harus muncul dua sesi aktif, yaitu `Client1` dan `Client2`, masing-masing dengan alamat IP berbeda dari pool.
 
 ### d. Ping ke sisi ISP
 
 Dari masing-masing client:
 
 ```routeros
-/ping 172.16.0.1
+/ping 10.10.10.1
 ```
 
 ![Ping dari R-Client1](images/ping-client1.png)
 
 ![Ping dari R-Client2](images/ping-client2.png)
 
-Ping ke `172.16.0.1` (alamat lokal R-ISP) berhasil tanpa static route, karena alamat di link PPP otomatis menjadi *connected route*.
+Ping ke `10.10.10.1` (alamat lokal R-ISP) berhasil tanpa static route, karena alamat di link PPP otomatis menjadi *connected route*.
 
 ## 8. Catatan: Route Belum Dipakai
 
 Lab ini hanya membuktikan bahwa sesi PPPoE terbentuk. PC dan static route untuk LAN pelanggan belum dipakai, dan akan dibahas di lab berikutnya, di mana jalur ke luar jaringan memang dibutuhkan.
 
-## 9. Troubleshooting
-
-| Gejala | Kemungkinan penyebab | Cek dan solusi |
-| --- | --- | --- |
-| Client tidak connect, server berflag `X` | PPPoE server nonaktif | `/interface pppoe-server server enable [find service-name=isp]`, atau tulis `disabled=no` saat membuatnya |
-| `input does not match any value of profile` saat membuat secret | Profile belum ada di router tempat perintah dijalankan, nama tidak cocok, atau pool belum dibuat sebelum profile | `/ppp profile print` di router yang sama, pastikan pool dibuat lebih dulu, dan ketik nama dengan Tab agar tidak salah |
-| Log client: `authentication failed` | Username atau password tidak cocok dengan secret | Samakan `user` dan `password` di client dengan secret di R-ISP |
-| Log client: `timeout` | Client belum tersambung ke server | Cek kabel di GNS3, interface yang dipilih, dan switch |
-| Hanya satu pelanggan yang bisa login | Secret kedua belum dibuat, atau user salah | `/ppp secret print` di R-ISP |
-| Client connect tapi tidak dapat IP | Pool kosong atau profile tidak menunjuk pool | `/ppp profile print` dan `/ip pool print` |
-
-Untuk melihat penyebab kegagalan di client:
-
-```routeros
-/log print where topics~"pppoe"
-```
-
-## 10. Kesimpulan
+## 9. Kesimpulan
 
 PPPoE server pada R-ISP berhasil dikonfigurasi dan melayani dua client dengan akun terpisah. Setiap client login dengan akunnya sendiri, mendapat alamat IP otomatis dari pool, dan dapat berkomunikasi dengan sisi ISP lewat link PPP. Lab ini menjadi dasar untuk lab berikutnya, yaitu menghubungkan jaringan pelanggan dan akses ke luar jaringan.
