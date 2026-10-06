@@ -93,8 +93,8 @@ Menentukan rentang IP yang akan dipinjamkan ke pelanggan.
 **3) Membuat akun pelanggan (PPP secret)**
 
 ```routeros
-/ppp secret add name=pelanggan1 password=contoh1 service=pppoe profile=profile-pppoe
-/ppp secret add name=pelanggan2 password=contoh2 service=pppoe profile=profile-pppoe
+/ppp secret add name=Client1 password=Cl1 service=pppoe profile=profile-pppoe
+/ppp secret add name=Client2 password=Cl2 service=pppoe profile=profile-pppoe
 ```
 
 Satu akun untuk satu pelanggan. Dengan akun terpisah, ISP bisa melihat siapa yang terhubung dan nanti bisa mengatur layanan per pelanggan.
