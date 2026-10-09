@@ -40,7 +40,7 @@ Tambahkan node **Cloud** ke topologi. Jika GNS3 menanyakan server tempat node di
 
 Klik kanan Cloud, pilih **Configure**, lalu pada tab Ethernet interfaces pilih interface yang terhubung ke jaringan host-only (VM berada di alamat `192.168.56.x`), dan tambahkan. Jangan pilih interface NAT, karena laptop tidak berada di jaringan itu.
 
-![Memilih interface Ethernet pada Cloud](images/cloud-interface.png)
+![Memilih interface Ethernet pada Cloud](images/cloud-interface1.png)
 
 ### c. Menghubungkan router ke Cloud
 
@@ -58,8 +58,6 @@ Sambungkan kabel dari `ether1` router ke Cloud, lalu pilih interface yang tadi d
 ### e. Membuka Winbox
 
 Buka Winbox di laptop, lalu masuk ke tab **Neighbors**. Router akan muncul di daftar beserta MAC address-nya.
-
-![Router muncul di tab Neighbors Winbox](images/winbox-neighbors.png)
 
 ### f. Connect ke router
 
