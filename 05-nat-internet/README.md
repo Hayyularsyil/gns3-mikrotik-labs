@@ -46,7 +46,7 @@ Perangkat yang dipakai: 1 node NAT, 1 router MikroTik (R-Gateway), 1 switch, dan
 
 ## 6. Konfigurasi
 
-Versi lengkap perintah router ada di [`configs/r-gateway.rsc`](configs/r-gateway.rsc).
+Versi lengkap perintah router ada di [`configs/r-gateway.rsc`](r-gateway.rsc).
 
 ### a. Node NAT
 
@@ -63,7 +63,7 @@ Tambahkan node **NAT** ke topologi, lalu sambungkan ke `ether1` router. Tidak ad
 
 Router dari template sudah memiliki DHCP client di `ether1` secara bawaan, sehingga langkah ini hanya berupa pemeriksaan. Pastikan statusnya `bound` dan `ether1` sudah mendapat alamat dari node NAT (flag `D`, dinamis).
 
-![DHCP client dan alamat di ether1](images/dhcp-client-address.png)
+![DHCP client dan alamat di ether1](images/dhcp-client.png)
 
 Mencoba membuat DHCP client baru di `ether1` akan ditolak dengan pesan `dhcp-client on that interface already exist`, karena sudah ada.
 
@@ -82,10 +82,13 @@ Harus ada route `0.0.0.0/0` lewat `ether1`, hasil dari DHCP client.
 ```routeros
 /ip address add address=192.168.10.1/24 interface=ether2 comment="LAN PC"
 ```
+![IP LAN](images/ether2-config.png)
 
 Alamat ini menjadi gateway bagi PC.
 
 **4) Membuat NAT masquerade**
+
+![IP LAN](images/srcnat.png)
 
 ```routeros
 /ip firewall nat print
@@ -121,9 +124,9 @@ PC2> save
 
 Perintah `ip dns` menambahkan alamat DNS server, dan `save` menyimpan pengaturan agar tidak hilang saat project dibuka ulang. Cek hasilnya dengan `show ip`.
 
-![show ip di PC1](images/show-ip-pc1.png)
+![show ip di PC1](images/pc1-config.png)
 
-![show ip di PC2](images/show-ip-pc2.png)
+![show ip di PC2](images/pc2-config.png)
 
 ## 7. Verifikasi
 
@@ -145,7 +148,7 @@ Ping berhasil berarti jalur dari router ke luar (node NAT dan default route) ber
 PC1> ping 8.8.8.8
 ```
 
-![Ping dari PC1 ke 8.8.8.8](images/ping-pc1-ip.png)
+![Ping dari PC1 ke 8.8.8.8](images/ping-pc2-ip-dns.png)
 
 Ping berhasil berarti NAT bekerja: paket dari `192.168.10.10` diterjemahkan dan balasannya kembali ke PC.
 
@@ -155,7 +158,7 @@ Ping berhasil berarti NAT bekerja: paket dari `192.168.10.10` diterjemahkan dan 
 PC1> ping google.com
 ```
 
-![Ping dari PC1 ke google.com](images/ping-pc1-domain.png)
+![Ping dari PC1 ke google.com](images/ping-pc2-domain.png)
 
 Ping ke nama domain berhasil berarti DNS di VPCS juga berfungsi.
 
@@ -165,7 +168,7 @@ Ping ke nama domain berhasil berarti DNS di VPCS juga berfungsi.
 /ip firewall nat print stats
 ```
 
-![Counter aturan NAT](images/nat-print-stats.png)
+![Counter aturan NAT](images/counter-nat.png)
 
 Kolom paket dan byte pada aturan masquerade berisi angka lebih dari 0, yang menandakan paket dari PC melewati aturan NAT.
 
