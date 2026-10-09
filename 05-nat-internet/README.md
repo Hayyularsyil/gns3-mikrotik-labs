@@ -46,7 +46,7 @@ Perangkat yang dipakai: 1 node NAT, 1 router MikroTik (R-Gateway), 1 switch, dan
 
 ## 6. Konfigurasi
 
-Versi lengkap perintah router ada di [`configs/r-gateway.rsc`](r-gateway.rsc).
+Versi lengkap perintah router ada di [`r-gateway.rsc`](r-gateway.rsc).
 
 ### a. Node NAT
 
@@ -80,7 +80,7 @@ Harus ada route `0.0.0.0/0` lewat `ether1`, hasil dari DHCP client.
 **3) Memberi IP di sisi LAN**
 
 ```routeros
-/ip address add address=192.168.10.1/24 interface=ether2 comment="LAN PC"
+/ip address add address=192.168.10.1/24 interface=ether2
 ```
 ![IP LAN](images/ether2-config.png)
 
