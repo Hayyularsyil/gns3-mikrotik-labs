@@ -88,8 +88,6 @@ Alamat ini menjadi gateway bagi PC.
 
 **4) Membuat NAT masquerade**
 
-![IP LAN](images/srcnat.png)
-
 ```routeros
 /ip firewall nat print
 ```
@@ -99,6 +97,7 @@ Tabel NAT pada router dari template masih kosong, jadi aturan masquerade ditamba
 ```routeros
 /ip firewall nat add chain=srcnat out-interface=ether1 action=masquerade comment="NAT ke internet"
 ```
+![IP LAN](images/srcnat.png)
 
 - `chain=srcnat` berarti aturan berlaku untuk paket yang akan keluar dan alamat sumbernya perlu diubah.
 - `out-interface=ether1` membatasi aturan pada paket yang keluar lewat sisi internet.
